@@ -1,0 +1,24 @@
+{
+  "name": "fcetool-serverless",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FCETool Telegram bot running on Telegram Serverless",
+  "type": "module",
+  "scripts": {
+    "login": "npx tgcloud login",
+    "push": "npx tgcloud push",
+    "status": "npx tgcloud status",
+    "deploy": "npx tgcloud push"
+  },
+  "devDependencies": {
+    "@tgcloud/cli": "^0.2.0"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "serverless",
+    "fcetool",
+    "firmware"
+  ],
+  "license": "MIT"
+}
