@@ -1,100 +1,107 @@
 export const API_URL = "https://offici5l-fcetool.hf.space/extract";
 
 export const SUPPORTED_TARGETS = [
-  "boot.img",
-  "init_boot.img",
-  "dtbo.img",
-  "super_empty.img",
-  "vbmeta.img",
-  "vendor_boot.img",
-  "vendor_kernel_boot.img",
-  "preloader.img",
-  "recovery.img",
-  "logo.img",
   "abl.img",
-  "hyp.img",
-  "modem.img",
-  "tz.img",
-  "xbl.img",
-  "lk.img",
-  "tee.img",
-  "md1img.img",
-  "preloader_emmc.img",
-  "preloader_raw.img",
-  "preloader_ufs.img",
-  "vbmeta_system.img",
-  "vbmeta_vendor.img",
-  "system_dlkm.img",
-  "vendor_dlkm.img",
   "aop.img",
   "aop_config.img",
+  "apusys.img",
+  "audio_dsp.img",
   "bluetooth.img",
+  "boot.img",
+  "ccu.img",
+  "connsys_bt.img",
+  "connsys_gnss.img",
+  "connsys_wifi.img",
+  "countrycode.img",
   "cpucp.img",
   "cpucp_dtb.img",
   "devcfg.img",
+  "dpm.img",
   "dsp.img",
+  "dtbo.img",
   "featenabler.img",
+  "gpueb.img",
+  "gz.img",
+  "hyp.img",
   "imagefv.img",
+  "init_boot.img",
   "keymaster.img",
+  "lk.img",
+  "logo.img",
+  "mcf_ota.img",
+  "mcupm.img",
+  "md1img.img",
+  "modem.img",
+  "mvpu_algo.img",
+  "odm_dlkm.img",
+  "pi_img.img",
+  "preloader.img",
+  "preloader_emmc.img",
+  "preloader_raw.img",
+  "preloader_ufs.img",
   "qupfw.img",
-  "shrm.img",
-  "uefi.img",
-  "uefisecapp.img",
-  "xbl_config.img",
-  "xbl_ramdump.img",
+  "recovery.img",
   "scp.img",
+  "shrm.img",
   "spmfw.img",
   "sspm.img",
+  "super_empty.img",
+  "system_dlkm.img",
+  "tee.img",
+  "tz.img",
+  "uefi.img",
+  "uefisecapp.img",
+  "vbmeta.img",
+  "vbmeta_system.img",
+  "vbmeta_vendor.img",
+  "vcp.img",
+  "vendor_boot.img",
+  "vendor_dlkm.img",
+  "vendor_kernel_boot.img",
+  "xbl.img",
+  "xbl_config.img",
+  "xbl_ramdump.img",
 ];
-
 export const SUPPORTED_TARGETS_SET = new Set(SUPPORTED_TARGETS);
 
-/** Most commonly requested targets — shown as quick buttons */
-export const POPULAR_TARGETS = [
-  "boot.img",
-  "init_boot.img",
-  "recovery.img",
-  "vbmeta.img",
-  "vendor_boot.img",
-  "dtbo.img",
-  "preloader.img",
-  "super_empty.img",
-];
+/** Validate absolute HTTP(S) URLs without relying on URL being available in the bot runtime. */
+export function isValidUrl(value) {
+  if (typeof value !== "string") return false;
+  const input = value.trim();
+  if (!input || /\s/.test(input)) return false;
 
-export function isValidUrl(url) {
-  return /^https?:\/\/\S+/i.test(url);
-}
+  const match = /^(https?):\/\/([^/?#]+)(?:[/?#][^\s]*)?$/i.exec(input);
+  if (!match) return false;
 
-export function getTargetsList() {
-  return SUPPORTED_TARGETS.join(", ");
-}
+  const authority = match[2];
+  if (!authority || authority.includes("@")) return false;
 
-/** Build inline keyboard rows of 2 buttons each */
-export function targetsKeyboard(targets, prefix = "t:") {
-  const rows = [];
-  for (let i = 0; i < targets.length; i += 2) {
-    const row = [{ text: targets[i], callback_data: prefix + targets[i] }];
-    if (targets[i + 1]) {
-      row.push({ text: targets[i + 1], callback_data: prefix + targets[i + 1] });
+  let hostname;
+  let port = "";
+  if (authority.startsWith("[")) {
+    const close = authority.indexOf("]");
+    if (close < 0) return false;
+    hostname = authority.slice(1, close);
+    const suffix = authority.slice(close + 1);
+    if (!/^[0-9a-f:.]+$/i.test(hostname)) return false;
+    if (suffix && !/^:\d{1,5}$/.test(suffix)) return false;
+    port = suffix ? suffix.slice(1) : "";
+  } else {
+    const colon = authority.lastIndexOf(":");
+    if (colon >= 0) {
+      if (authority.indexOf(":") !== colon) return false;
+      hostname = authority.slice(0, colon);
+      port = authority.slice(colon + 1);
+      if (!/^\d{1,5}$/.test(port)) return false;
+    } else {
+      hostname = authority;
     }
-    rows.push(row);
+    if (!hostname || hostname.length > 253) return false;
+    const labels = hostname.split(".");
+    if (labels.some((label) =>
+      !label || label.length > 63 || !/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i.test(label)
+    )) return false;
   }
-  return rows;
-}
 
-export function mainMenuKeyboard(botUsername) {
-  return {
-    inline_keyboard: [
-      [{ text: "📦 Extract File", callback_data: "menu:extract" }],
-      [
-        { text: "📋 Supported Targets", callback_data: "menu:targets" },
-        { text: "❓ How to Use", callback_data: "menu:help" },
-      ],
-      [
-        { text: "🌐 Web Interface", url: "https://offici5l.github.io/fcetool" },
-        { text: "📂 Source Code", url: "https://github.com/offici5l/fcetool" },
-      ],
-      [{ text: "📢 Channel", url: "https://t.me/Offici5l_Channel" }],
-    ],
-  };
+  return !port || (Number(port) > 0 && Number(port) <= 65535);
 }

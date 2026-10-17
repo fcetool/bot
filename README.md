@@ -1,72 +1,63 @@
 # FCETool Bot
 
-Professional Telegram bot that extracts partition files (`boot.img`, `recovery.img`, …) from remote firmware / ROM ZIP archives — without downloading the full package.
+Telegram bot for extracting partition files (`boot.img`, `recovery.img`, and more) from remote firmware ZIP archives. The bot uses **inline mode only** for extraction; the separate web interface is available at <https://fcetool.github.io>.
 
 Runs on **Telegram Serverless**. No VPS required.
 
-## Features
+## Telegram experience
 
-- 📦 Interactive button-based extraction flow
-- 🔗 Paste a URL → pick target from buttons
-- ⚡ `/extract <URL> <TARGET>` command
-- 🔍 Inline mode in any chat
-- 📋 Full list of supported partition files
-- 🌐 Link to the web interface
+1. In any chat, type `@YourBot <firmware ZIP URL> <partition>`.
+2. If you enter only a ZIP URL, choose any partition from the complete list of 60 targets. Telegram loads the final 10 on the next page as you scroll because one inline response can contain at most 50 results. You can also type a target after the URL to filter to one result.
+3. Select the extraction result. The inline message updates with progress and then a **Download file** button.
 
-## How users interact
-
-1. **/start** → main menu with buttons  
-2. Tap **Extract File** → send firmware URL  
-3. Choose target (`boot.img`, …) from the keyboard  
-4. Get a download button when done  
-
-Alternative: send a URL directly, or use `/extract`.
+`/start` and `/help` only explain inline usage. Direct URL messages, extraction commands, and menu-based flows are intentionally not supported.
 
 ## Setup
 
-### 1. Enable Serverless in BotFather
+### 1. Configure the bot in BotFather
 
-Bot → **Serverless** → ON → copy **CLI Access** token.
+- Enable **Serverless** and copy the **CLI Access** token.
+- Enable **Inline Mode**.
+- Enable **Inline Feedback** so Telegram returns the inline message ID needed to update the selected result when extraction finishes.
 
-### 2. Install & link
+### 2. Install and link
 
 ```bash
 npm install
 npx tgcloud login
 ```
 
-### 3. Deploy code + database schema
+### 3. Deploy
 
 ```bash
 npx tgcloud push
 npx tgcloud migrate
 ```
 
-### 4. Test
+### 4. Use it
 
-Open the bot → `/start` → **Extract File**.
+In any Telegram chat, type `@YourBot https://example.com/firmware.zip boot.img`, select the result, and wait for the download button to appear.
 
 ## Project structure
 
 ```
 tgcloud/
 ├── handlers/
-│   ├── message.js              # /start /help /extract + URL detection
-│   ├── callback_query.js       # All inline button actions
-│   ├── inline_query.js         # Inline mode
-│   └── chosen_inline_result.js # Inline extraction
+│   ├── message.js              # /start and /help instructions only
+│   ├── callback_query.js       # Acknowledges the temporary inline status button
+│   ├── inline_query.js         # Inline search and partition suggestions
+│   └── chosen_inline_result.js # Runs and displays the extraction
 ├── lib/
-│   ├── config.js               # Targets, keyboards, helpers
-│   ├── extract.js              # FCETool API client
-│   └── session.js              # Pending URL sessions
-└── schema.js                   # sessions table
+│   ├── config.js               # API endpoint, supported targets, URL validation
+│   └── extract.js              # FCETool API client with timeout and error handling
+└── schema.js                   # Existing session schema retained for migration compatibility
 ```
 
 ## Notes
 
-- Extraction is performed by the [FCETool API](https://github.com/offici5l/fcetool).
-- A small SQLite session table stores the URL while the user picks a target.
+- Extraction is performed by the [FCETool API](https://github.com/fcetool/fcetool).
 - Requires Node.js 18+.
+- The legacy database schema remains in place but is no longer used by inline extraction.
 
 ## License
 

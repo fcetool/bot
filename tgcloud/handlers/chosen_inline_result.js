@@ -4,70 +4,61 @@ import { extractFile } from "../lib/extract.js";
 
 export default async function (chosen) {
   const inlineMessageId = chosen.inline_message_id;
-  if (!inlineMessageId) return;
+  if (!inlineMessageId) {
+    console.error("Inline result has no inline_message_id. Enable Inline Feedback in BotFather.");
+    return;
+  }
 
   const parts = (chosen.query || "").trim().split(/\s+/).filter(Boolean);
-  if (parts.length < 2) return;
-
   const url = parts[0];
-  const target = parts[1];
-  if (!isValidUrl(url) || !SUPPORTED_TARGETS_SET.has(target)) return;
+  const selectedTarget = (chosen.result_id || "").startsWith("extract:")
+    ? chosen.result_id.slice("extract:".length)
+    : parts[1];
+
+  if (!isValidUrl(url) || !SUPPORTED_TARGETS_SET.has(selectedTarget)) {
+    console.error("Inline result contained an invalid URL or unsupported target.");
+    return;
+  }
+
+  let result;
+  try {
+    result = await extractFile(url, selectedTarget);
+  } catch (error) {
+    console.error("Unexpected extraction error:", error);
+    result = { ok: false, error: "An unexpected error occurred while extracting this file." };
+  }
+
+  const replyMarkup = result.ok
+    ? {
+        inline_keyboard: [[{ text: "📥 Download file", url: result.download_url }]],
+      }
+    : {
+        inline_keyboard: [[{
+          text: "↻ Try again",
+          switch_inline_query_current_chat: url + " " + selectedTarget,
+        }]],
+      };
+
+  const messageText = result.ok
+    ? "✅ *Extraction completed*\n" +
+      "━━━━━━━━━━━━━━━━━━\n" +
+      "📂 *File:* `" + selectedTarget + "`\n" +
+      "⏱ *Time:* `" + result.duration_seconds + "s`\n\n" +
+      "Your file is ready to download."
+    : "❌ Extraction failed\n" +
+      "━━━━━━━━━━━━━━━━━━\n" +
+      result.error + "\n\n" +
+      "Tap Try again to rerun it in inline mode.";
 
   try {
     await api.editMessageText({
       inline_message_id: inlineMessageId,
-      text:
-        "⚙️ *Processing…*\n" +
-        "━━━━━━━━━━━━━━━━━━\n" +
-        "🎯 *Target:* `" + target + "`\n" +
-        "⏳ Running extraction…",
-      parse_mode: "Markdown",
+      text: messageText,
+      ...(result.ok ? { parse_mode: "Markdown" } : {}),
+      disable_web_page_preview: true,
+      reply_markup: replyMarkup,
     });
-
-    const result = await extractFile(url, target);
-
-    if (result.ok) {
-      await api.editMessageText({
-        inline_message_id: inlineMessageId,
-        text:
-          "✅ *Extraction Completed*\n" +
-          "━━━━━━━━━━━━━━━━━━\n" +
-          "📂 *File:* `" + target + "`\n" +
-          "⏱ *Time:* `" + result.duration_seconds + "s`\n" +
-          "━━━━━━━━━━━━━━━━━━\n" +
-          "Open source: [fcetool](https://github.com/offici5l/fcetool)\n" +
-          "By: [offici5l](https://t.me/Offici5l_Channel)",
-        parse_mode: "Markdown",
-        disable_web_page_preview: true,
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "📥 Download File", url: result.download_url }],
-          ],
-        },
-      });
-    } else {
-      await api.editMessageText({
-        inline_message_id: inlineMessageId,
-        text:
-          "❌ *Failed*\n" +
-          "━━━━━━━━━━━━━━━━━━\n" +
-          "⚠️ `" + result.error + "`",
-        parse_mode: "Markdown",
-      });
-    }
-  } catch (err) {
-    try {
-      await api.editMessageText({
-        inline_message_id: inlineMessageId,
-        text:
-          "❌ *Error*\n" +
-          "━━━━━━━━━━━━━━━━━━\n" +
-          "`" + (err.message || String(err)) + "`\n\n" +
-          "Try the [Web Interface](https://offici5l.github.io/fcetool)",
-        parse_mode: "Markdown",
-      });
-    } catch {
-      // ignore
-    }
+  } catch (error) {
+    console.error("Unable to update the selected inline result:", error);
   }
 }
