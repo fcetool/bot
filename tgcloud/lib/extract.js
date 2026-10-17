@@ -3,6 +3,7 @@ import { API_URL } from "./config.js";
 
 /**
  * Call FCETool API and return result.
+ * @returns {{ ok: true, download_url: string, duration_seconds: string|number } | { ok: false, error: string }}
  */
 export async function extractFile(url, target) {
   try {

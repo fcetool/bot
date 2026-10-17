@@ -1,5 +1,5 @@
 import { api } from "sdk";
-import { isValidUrl, SUPPORTED_TARGETS } from "../lib/config.js";
+import { isValidUrl, SUPPORTED_TARGETS_SET } from "../lib/config.js";
 import { extractFile } from "../lib/extract.js";
 
 export default async function (chosen) {
@@ -11,17 +11,16 @@ export default async function (chosen) {
 
   const url = parts[0];
   const target = parts[1];
-
-  if (!isValidUrl(url) || !SUPPORTED_TARGETS.has(target)) return;
+  if (!isValidUrl(url) || !SUPPORTED_TARGETS_SET.has(target)) return;
 
   try {
     await api.editMessageText({
       inline_message_id: inlineMessageId,
       text:
-        "⚙️ *Processing...*\n" +
+        "⚙️ *Processing…*\n" +
         "━━━━━━━━━━━━━━━━━━\n" +
-        "🎯 Target: `" + target + "`\n" +
-        "⏳ Status: `Running extraction...`",
+        "🎯 *Target:* `" + target + "`\n" +
+        "⏳ Running extraction…",
       parse_mode: "Markdown",
     });
 
@@ -34,7 +33,6 @@ export default async function (chosen) {
           "✅ *Extraction Completed*\n" +
           "━━━━━━━━━━━━━━━━━━\n" +
           "📂 *File:* `" + target + "`\n" +
-          "🔗 *From:* " + url + "\n" +
           "⏱ *Time:* `" + result.duration_seconds + "s`\n" +
           "━━━━━━━━━━━━━━━━━━\n" +
           "Open source: [fcetool](https://github.com/offici5l/fcetool)\n" +
@@ -53,7 +51,7 @@ export default async function (chosen) {
         text:
           "❌ *Failed*\n" +
           "━━━━━━━━━━━━━━━━━━\n" +
-          "⚠️ Error: `" + result.error + "`",
+          "⚠️ `" + result.error + "`",
         parse_mode: "Markdown",
       });
     }
@@ -62,16 +60,14 @@ export default async function (chosen) {
       await api.editMessageText({
         inline_message_id: inlineMessageId,
         text:
-          "❌ *Error Occurred*\n" +
+          "❌ *Error*\n" +
           "━━━━━━━━━━━━━━━━━━\n" +
-          "⚠️ `" + (err.message || String(err)) + "`\n\n" +
-          "🌐 *Alternative:*\n" +
+          "`" + (err.message || String(err)) + "`\n\n" +
           "Try the [Web Interface](https://offici5l.github.io/fcetool)",
         parse_mode: "Markdown",
-        disable_web_page_preview: false,
       });
     } catch {
-      // ignore edit errors
+      // ignore
     }
   }
 }

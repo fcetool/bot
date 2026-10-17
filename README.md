@@ -1,71 +1,72 @@
-# FCETool Bot — Telegram Serverless
+# FCETool Bot
 
-Telegram bot that extracts specific files (like `boot.img`) from remote firmware/ROM ZIP archives using [FCETool](https://github.com/offici5l/fcetool).
+Professional Telegram bot that extracts partition files (`boot.img`, `recovery.img`, …) from remote firmware / ROM ZIP archives — without downloading the full package.
 
-Runs entirely on **Telegram Serverless** — no VPS required.
+Runs on **Telegram Serverless**. No VPS required.
 
 ## Features
 
-- `/extract <URL> <TARGET>` command
-- Inline mode: `@YourBot <URL> <TARGET>`
-- Calls the official FCETool API
-- Clean success/error messages with download button
+- 📦 Interactive button-based extraction flow
+- 🔗 Paste a URL → pick target from buttons
+- ⚡ `/extract <URL> <TARGET>` command
+- 🔍 Inline mode in any chat
+- 📋 Full list of supported partition files
+- 🌐 Link to the web interface
 
-## Supported Targets
+## How users interact
 
-`boot.img`, `init_boot.img`, `recovery.img`, `vbmeta.img`, `vendor_boot.img`, and many more (see `tgcloud/lib/config.js`).
+1. **/start** → main menu with buttons  
+2. Tap **Extract File** → send firmware URL  
+3. Choose target (`boot.img`, …) from the keyboard  
+4. Get a download button when done  
+
+Alternative: send a URL directly, or use `/extract`.
 
 ## Setup
 
-### 1. Enable Serverless
+### 1. Enable Serverless in BotFather
 
-In [@BotFather](https://t.me/BotFather):
+Bot → **Serverless** → ON → copy **CLI Access** token.
 
-1. Select your bot → **Serverless** → turn it on
-2. Go to **CLI Access** → copy the Access Token
-
-### 2. Install & Link
+### 2. Install & link
 
 ```bash
 npm install
 npx tgcloud login
 ```
 
-Paste the Access Token when prompted.
-
-### 3. Deploy
+### 3. Deploy code + database schema
 
 ```bash
 npx tgcloud push
+npx tgcloud migrate
 ```
 
 ### 4. Test
 
-```
-/extract https://example.com/rom.zip boot.img
-```
+Open the bot → `/start` → **Extract File**.
 
-Or use inline mode in any chat.
-
-## Project Structure
+## Project structure
 
 ```
 tgcloud/
 ├── handlers/
-│   ├── message.js                 # /start /help /extract
-│   ├── inline_query.js            # Inline mode
-│   └── chosen_inline_result.js    # After selecting inline result
+│   ├── message.js              # /start /help /extract + URL detection
+│   ├── callback_query.js       # All inline button actions
+│   ├── inline_query.js         # Inline mode
+│   └── chosen_inline_result.js # Inline extraction
 ├── lib/
-│   ├── config.js                  # API URL + supported targets
-│   └── extract.js                 # Call FCETool API
-└── schema.js                      # (empty — no database used)
+│   ├── config.js               # Targets, keyboards, helpers
+│   ├── extract.js              # FCETool API client
+│   └── session.js              # Pending URL sessions
+└── schema.js                   # sessions table
 ```
 
 ## Notes
 
-- Extraction is performed by the external FCETool API (`offici5l-fcetool.hf.space`)
-- No local database is used
-- Requires Node.js 18+
+- Extraction is performed by the [FCETool API](https://github.com/offici5l/fcetool).
+- A small SQLite session table stores the URL while the user picks a target.
+- Requires Node.js 18+.
 
 ## License
 

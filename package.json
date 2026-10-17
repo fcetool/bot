@@ -1,14 +1,15 @@
 {
-  "name": "fcetool-serverless",
-  "version": "1.0.0",
+  "name": "fcetool-bot",
+  "version": "2.0.0",
   "private": true,
-  "description": "FCETool Telegram bot running on Telegram Serverless",
+  "description": "Professional FCETool Telegram bot on Telegram Serverless — extract partition files from remote firmware ZIPs",
   "type": "module",
   "scripts": {
     "login": "npx tgcloud login",
     "push": "npx tgcloud push",
     "status": "npx tgcloud status",
-    "deploy": "npx tgcloud push"
+    "migrate": "npx tgcloud migrate",
+    "deploy": "npx tgcloud push && npx tgcloud migrate"
   },
   "devDependencies": {
     "@tgcloud/cli": "^0.2.0"
@@ -18,7 +19,13 @@
     "bot",
     "serverless",
     "fcetool",
-    "firmware"
+    "firmware",
+    "android",
+    "boot.img"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fcetool/bot"
+  }
 }
