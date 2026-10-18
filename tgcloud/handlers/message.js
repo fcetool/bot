@@ -12,14 +12,14 @@ export default async function (message) {
   await api.sendMessage({
     chat_id: chatId,
     text:
-      "Use FCETool in any chat. Type:\n\n" +
+      "Use FCETool in any chat:\n\n" +
       "@" + me.username + " <ZIP URL> <partition>\n\n" +
       "Example:\n" +
       "@" + me.username + " https://example.com/firmware.zip boot.img\n\n" +
       "Supported partitions:\n" +
       SUPPORTED_TARGETS.join(", ") + "\n\n" +
       "For large files (system.img, vendor.img, ...):\n" +
-      "https://github.com/fcetool",
+      "Use the CLI: https://github.com/fcetool",
     disable_web_page_preview: true,
   });
 }
