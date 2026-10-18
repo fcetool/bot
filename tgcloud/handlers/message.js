@@ -1,4 +1,5 @@
 import { api } from "sdk";
+import { SUPPORTED_TARGETS } from "../lib/config.js";
 
 export default async function (message) {
   const text = (message.text || "").trim();
@@ -14,7 +15,11 @@ export default async function (message) {
       "Use FCETool in any chat. Type:\n\n" +
       "@" + me.username + " <ZIP URL> <partition>\n\n" +
       "Example:\n" +
-      "@" + me.username + " https://example.com/firmware.zip boot.img",
+      "@" + me.username + " https://example.com/firmware.zip boot.img\n\n" +
+      "Supported partitions:\n" +
+      SUPPORTED_TARGETS.join(", ") + "\n\n" +
+      "For large files (system.img, vendor.img, ...):\n" +
+      "https://github.com/fcetool",
     disable_web_page_preview: true,
   });
 }
